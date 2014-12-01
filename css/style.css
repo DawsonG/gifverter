@@ -1,0 +1,35 @@
+html, body, .container-fluid {
+	height: 100%;
+}
+
+body {
+	background-color: #556270;
+
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+	font-weight: 300;
+	font-size: 16px;
+	color: #9bb3cc;
+}
+
+.ribbon {
+	position: absolute; 
+	top: 0; 
+	right: 0; 
+	border: 0;
+}
+
+.bar {
+	background: url('/img/bar.png') no-repeat center center;
+	font-size: 32px;
+	margin: 0px 0px 25px 0px;
+	padding: 0px 0px 0px 6px;
+}
+
+.bar a {
+	color: #9bb3cc;
+	text-decoration: none;
+}
+
+#result {
+	position: relative;
+}
