@@ -1,8 +1,6 @@
 importScripts('lib/ffmpeg-all-codecs.js');
 importScripts('shared.js');
 
-var files = [];
-
 function print(text) {
 	postMessage({
 		'type' : 'stdout',
@@ -10,18 +8,8 @@ function print(text) {
 	});
 }
 
-function getExtension(name) {
-	return name.split('.').pop();
-}
-
-if (typeof String.prototype.startsWith != 'function') {
-	String.prototype.startsWith = function (str){
-		return this.lastIndexOf(str, 0) === 0;
-	};
-}
-
-function parseArguments(text, index) {
-	text = text.replace(/\s+/g, ' ');
+function parseArguments(qf) {
+	var text = qf.command.cmd.replace(/\s+/g, ' ');
 	var args = [];
 	// Allow double quotes to not split args.
 	text.split('"').forEach(function(t, i) {
@@ -33,114 +21,86 @@ function parseArguments(text, index) {
 		}
 	});
 
-	if (index < 0)
-		return args; //no processing needed of $params
-
 	for(var i = 0; i < args.length; i++) {
 		if (args[i].startsWith("$output.")) {
-			args[i] = args[i].replace('$output', files[index].name.split('.')[0]);
+			args[i] = args[i].replace('$output', qf.fileName.split('.')[0]);
 			continue;
 		}
 
 		switch (args[i]) {
 			case "$input":
-				args[i] = files[index].name;
+				args[i] = qf.fileName;
 				break;
 			case "$size":
-				args[i] = files[index].size;
+				args[i] = qf.size;
+				break;
+			case "$sizeAdjusted":
+				//Some conversions require the result to be divisible by two
+				//if 
 				break;
 			case "$output":
-				args[i] = "output." + getExtension(files[index].name);
+				args[i] = qf.fileName;
 				break;
 		}
 	}
-
 	return args;
 }
 
-function findCommandByField(fieldName, fieldValue) {
-	for(var i = 0; i < commands.length; i++) {
-		var item = commands[i];
-		if (item[fieldName] == fieldValue)
-			return item;
-	}
 
-	return null;
-}
-
-function findFieldByField(fieldName, fieldValue, getField) {
-	for(var i = 0; i < commands.length; i++) {
-		var item = commands[i];
-		if (item[fieldName] == fieldValue)
-			return item[getField];
-	}
-
-	return null;
-}
 
 onmessage = function(event) {
 	var message = event.data;
 	
-	switch (message.type) {
-		case "queue":
-			files.push({
-				name : message.name,
-				data : message.data,
-				size : message.size
-			});
 
-			postMessage({
-				'type' : 'stdout',
-				'data' : 'File ' + message.name + ' queued.'
-			});
-			break;
-		case "dequeue":
-			files.splice(message.index, 1);
-			break;
-		case "command":
+	switch (message.type) {
+		case "run-queue":
 			var Module = {
 				print: print,
 				printErr: print,
-				TOTAL_MEMORY: 268435456
+				TOTAL_MEMORY: 268435456,
+				files: [],
+				arguments: ""
 			}
-
-			postMessage({
-				'type' : 'start'
-			});
-
-			postMessage({
-				'type' : "stdout",
-				'data' : "Received command -- " + message.command + "! Processing with " + Module.TOTAL_MEMORY + " bits."
-			});
 
 			var time = new Date();
-			var result = [];
-			
-			var command = findCommandByField('name', message.command);
-			if (!command.valid || command.valid == null || command.valid == 'undefined') {
-				Module.arguments = parseArguments(command.cmd, -1);
+			for (var i = 0; i < message.queue.length; i++) {
+				var qf = message.queue[i];
 
-				var tmp = ffmpeg_run(Module);
-				result.push(tmp);
-			} else {
-				for(var i = 0; i < files.length; i++) {
-					Module.files = [files[i]];
-					Module.arguments = parseArguments(command.cmd, i);
+				Module.files = [{name: qf.fileName, data: qf.fileData}];
+				Module.arguments = parseArguments(qf);
 
-					var tmp = ffmpeg_run(Module);
-					result.push(tmp[0]);
+				postMessage({
+					'type' : 'start',
+					'key' : qf.key,
+					'command' : Module.arguments.join(" ")
+				});
+
+				postMessage({
+					'type' : 'stdout',
+					'data' : 'Received command: ' +
+						Module.arguments.join(" ") +
+						((Module.TOTAL_MEMORY) ? ".  Processing with " + Module.TOTAL_MEMORY + " bits." : "")
+				});
+
+				try {
+					var result = ffmpeg_run(Module);
+					postMessage({
+						'type' : 'stdout',
+						'data' : 'Finished processing (took ' + new Date() - time + 'ms)'
+					});
+					postMessage({
+						'type' : 'result',
+						'data' : result,
+						'key'  : qf.key
+					});
+				} catch (ex) {
+					console.log(ex);
 				}
+				
 			}
-			
 			var totalTime = new Date() - time;
 			postMessage({
-				'type' : 'stdout',
-				'data' : 'Finished processing (took ' + totalTime + 'ms)'
-			});
-
-			postMessage({
 				'type' : 'done',
-				'data' : result,
 				'time' : totalTime
 			});
 			break;

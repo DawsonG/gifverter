@@ -10,12 +10,10 @@
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="/css/style.css">
-	<link rel="stylesheet" href="/css/darktooltip.min.css">
 
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 	<script src="/js/lib/spin.min.js"></script>
-	<script src="/js/lib/jquery.darktooltip.min.js"></script>
 	<script src="/js/lib/filereader.js"></script>
 	
 	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -38,10 +36,32 @@
 
 				<div id="result">
 					<div id="image-loader"></div>
-					<p>Drag and drop files anywhere on the page to begin.</p>
+					<p>
+						Drag and drop files anywhere on the page to begin.<br/>
+						<br/>
+						Click the thumbnails to configure options.
+					</p>
 				</div>
+
+				<button id="btn-convert" style="display:none;">Convert</button>
 			</div>
 		</div>
+	</div>
+
+	<div id="animated-image-content" class="hidden">
+		<div class="radio">
+			<label>
+				<input type="radio" name="radImage{identifier}" rel="{identifier}" class="rad" value="gif2webm"{{gif2webm}}>
+				To .webm
+			</label>
+		</div>
+		<div class="radio">
+			<label>
+				<input type="radio" name="radImage{identifier}" rel="{identifier}" class="rad" value="gif2mp4"{{gif2mp4}}>
+				To .mpeg4
+			</label>
+		</div>
+		<button id="btn{identifier}" class="btn-remove" rel="{identifier}">Remove</button>
 	</div>
 </body>
 

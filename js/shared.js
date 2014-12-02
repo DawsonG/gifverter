@@ -35,10 +35,98 @@ var commands = [{
 }];
 
 /**
+ * ------------- Common Objects -------------- 
+ */
+function Queue() {
+	this.files = [];
+	this.preQueueFile = null;
+	this.postQueueFile = null;
+}
+
+Queue.prototype.add = function(fileName, fileData) {
+	if (isFunction(this.preQueueFile))
+		this.preQueueFile();
+
+	var qf = new QueuedFile(fileName, fileData);
+	qf.key = this.files.length;
+	this.files.push(qf);
+
+	if (isFunction(this.postQueueFile))
+		this.postQueueFile();
+	return qf;
+};
+
+Queue.prototype.addQueuedFile = function(qf) {
+	if (isFunction(this.preQueueFile))
+		this.preQueueFile();
+
+	qf.key = this.files.length;
+	this.files.push(qf);
+
+	if (isFunction(this.postQueueFile))
+		this.postQueueFile();
+	return qf;
+};
+
+Queue.prototype.changeCommand = function(key, command) {
+	this.files[key].command = command;
+};
+
+Queue.prototype.remove = function(key) {
+	if (isFunction(this.preQueueFile))
+		this.preQueueFile();
+	
+	this.files.splice(key, 1);
+
+	if (isFunction(this.postQueueFile))
+		this.postQueueFile();
+}
+
+function QueuedFile(fileName, fileData) {
+	this.key = -1;
+	this.fileName = fileName;
+	this.fileData = fileData;
+	this.extension = getExtension(fileName);
+	this.width = -1;
+	this.height = -1;
+	this.size = "";
+
+	this.added = false;
+
+	this.command = null;
+}
+
+
+/**
  * ------------ Utility functions ------------
-*/
+ */
 function getExtension(fileName) {
 	return fileName.split('.').pop();
+}
+
+function isFunction(functionToCheck) {
+	var getType = {};
+	return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+}
+
+function findCommand(fieldValue) {
+	return findCommandByField("name", fieldValue);
+}
+
+function findCommandByField(fieldName, fieldValue) {
+	for(var i = 0; i < commands.length; i++) {
+		var item = commands[i];
+		if (item[fieldName] == fieldValue)
+			return item;
+	}
+
+	return null;
+}
+
+if (typeof String.prototype.startsWith != 'function') {
+	String.prototype.startsWith = function (str){
+		return this.lastIndexOf(str, 0) === 0;
+	};
 }
 
 /**
@@ -52,7 +140,6 @@ function getExtension(fileName) {
 * @return {Object} { width, heigth }
 */
 function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
-
     var ratio = [maxWidth / srcWidth, maxHeight / srcHeight ];
     ratio = Math.min(ratio[0], ratio[1]);
 
