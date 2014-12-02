@@ -136,7 +136,7 @@ function getDownloadLink(fileName, fileData) {
 	a.download = fileName || 'output.mpeg';
 	a.href = window.URL.createObjectURL(new Blob([fileData]));
 	var span = document.createElement('span');
-	span.class = 'glyphicon glyphicon-eject';
+	span.className = 'glyphicon glyphicon-eject';
 	a.appendChild(span);
 
 	return a;

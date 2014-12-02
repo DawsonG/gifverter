@@ -55,10 +55,14 @@ body {
 	position:absolute;
 	display: block;
 	background-color: #69798a;
-	border-radius:50%
+	border-radius:50%;
 	top: 45%;
 	font-size: 36px;
 	z-index:10000;
+}
+
+#result > a > a span {
+	padding: 10px;
 }
 
 #btn-convert {
